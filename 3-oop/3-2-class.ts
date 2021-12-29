@@ -8,6 +8,7 @@ namespace Class {
     static BEANS_GRAM_PER_SHOT: number = 5; // class level
     coffeeBeans: number = 0; // instance (object) level
 
+    // 생성자(constructor)는 객체(object)가 만들어질 때 딱 한번 호출되는 생성자 함수이다.
     constructor(coffeeBeans: number) {
       this.coffeeBeans = coffeeBeans;
     }

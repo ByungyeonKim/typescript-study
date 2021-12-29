@@ -14,7 +14,7 @@ namespace Encapsulation {
     private static BEANS_GRAM_PER_SHOT: number = 5; // class level
     private coffeeBeans: number = 0; // instance (object) level
 
-    // 생성자를 비공개(private)로 만들어서 항상 static한 메소드를 사용하도록 권장(강제)할 수 있다.
+    // 생성자를 비공개(private)로 만들어서 항상 static한 메소드를 사용하도록 권장 할 수 있다.
     private constructor(coffeeBeans: number) {
       this.coffeeBeans = coffeeBeans;
     }
