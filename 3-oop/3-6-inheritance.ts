@@ -9,7 +9,7 @@ namespace Inheritance {
   }
 
   /**
-   * Inheritance. 상속 👨‍👩‍👧‍👦
+   * Inheritance. extends 상속 👨‍👩‍👧‍👦
    */
   class CoffeeMachine implements CoffeeMaker {
     // public: 기본값, 생략이 가능하다. 외부에서 볼 수 있고, 조작이 가능하다.
