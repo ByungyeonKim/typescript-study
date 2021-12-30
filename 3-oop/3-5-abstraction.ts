@@ -6,15 +6,22 @@ namespace Abstraction {
 
   // 인터페이스는 일종의 계약서와 같다. 해당 인터페이스로 구현한 클래스는
   // 인터페이스 내부에 규약된 코드를 반드시 구현해야 한다.
+  // 따라서 타입을 규약한다기 보다는 어떤 동작을 하는지(함수, 전달되는 인자, 리턴 되는 값 등)를 정의하는 것이다.
   interface CoffeeMaker {
     makeCoffee(shots: number): CoffeeCup;
     // coffee: string;
   }
 
+  interface ProCoffeeMaker {
+    makeCoffee(shots: number): CoffeeCup;
+    fillCoffeeBeans(beans: number): void;
+    clean(): void;
+  }
+
   /**
    * 커피 머신 ⚙️
    */
-  class CoffeeMachine implements CoffeeMaker {
+  class CoffeeMachine implements CoffeeMaker, ProCoffeeMaker {
     // public: 기본값, 생략이 가능하다. 외부에서 볼 수 있고, 조작이 가능하다.
     // private: 외부에서 절대 볼 수 없고, 접근도 할 수 없다.
     // protected: 외부에선 접근 할 수 없지만, 해당 클래스를 통해 상속한 자식 클래스는 접근이 가능하다.
@@ -36,6 +43,13 @@ namespace Abstraction {
         throw Error('커피 콩의 값은 0보다 커야합니다.');
       }
       this.coffeeBeans += beans;
+      console.log(
+        `커피빈을 채웠어요. 현재 남은 양은 ${this.coffeeBeans}입니다.`
+      );
+    }
+
+    clean() {
+      console.log('커피머신을 청소 중입니다... 🧼');
     }
 
     private grindBeans(shots: number) {
@@ -68,14 +82,31 @@ namespace Abstraction {
     }
   }
 
-  const maker: CoffeeMachine = CoffeeMachine.makeMachine(30);
-  maker.fillCoffeeBeans(90);
-  const coffee = maker.makeCoffee(1);
-  console.log(coffee);
+  class AmateurUser {
+    constructor(private machine: CoffeeMaker) {}
+    makeCoffee() {
+      const coffee = this.machine.makeCoffee(2);
+      console.log(coffee);
+    }
+  }
 
-  const maker2: CoffeeMaker = CoffeeMachine.makeMachine(30);
-  // CoffeeMaker 인터페이스에 존재하지 않는 함수는 사용할 수가 없다.
-  // maker2.fillCoffeeBeans(90);
-  const coffee2 = maker2.makeCoffee(2);
-  console.log(coffee2);
+  class ProBarista {
+    constructor(private machine: ProCoffeeMaker) {}
+    makeCoffee() {
+      const coffee = this.machine.makeCoffee(1);
+      console.log(coffee);
+      this.machine.fillCoffeeBeans(30);
+      this.machine.clean();
+    }
+  }
+
+  // 해당 객체 사용자는 인터페이스의 내부라던지, 얼마나 많은 함수들이 있는지 신경쓰지 않아도 쉽게 사용이 가능하다.
+  // 그 이유는 인터페이스에 규약된 함수들만 이용해서 생성된 객체와 의사소통을 하기 때문이다.
+  // 사용자는 인터페이스만 보고 사용을 하면 된다.
+  const maker: CoffeeMachine = CoffeeMachine.makeMachine(30);
+  const amateur = new AmateurUser(maker);
+  const barista = new ProBarista(maker);
+  amateur.makeCoffee();
+  console.log('--------------------------------------------------');
+  barista.makeCoffee();
 }
