@@ -20,11 +20,16 @@ class StackImpl implements Stack {
   private _size: number = 0;
   private head?: StackNode;
 
+  constructor(private capacity: number) {}
+
   get size() {
     return this._size;
   }
 
   push(value: string) {
+    if (this.size === this.capacity) {
+      throw new Error('스택이 가득 찼습니다.');
+    }
     const node: StackNode = {
       value,
       next: this.head,
@@ -48,11 +53,11 @@ class StackImpl implements Stack {
   }
 }
 
-const stackImpl = new StackImpl();
-stackImpl.push('vintz');
-stackImpl.push('teo');
-stackImpl.push('react');
-stackImpl.pop();
-stackImpl.pop();
-stackImpl.pop();
-// stackImpl.pop();
+const stack = new StackImpl(2);
+stack.push('vintz');
+stack.push('teo');
+stack.push('react');
+stack.pop();
+stack.pop();
+stack.pop();
+// stack.pop();
