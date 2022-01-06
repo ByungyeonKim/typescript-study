@@ -9,20 +9,29 @@ namespace Composition {
     makeCoffee(shots: number): CoffeeCup;
   }
 
+  interface MilkFrother {
+    makeMilk(cup: CoffeeCup): CoffeeCup;
+  }
+
+  interface SugarProvider {
+    addSugar(cup: CoffeeCup): CoffeeCup;
+  }
+
   /**
    * Composition. 상속보단 컴포지션을 더 선호하라!
    * 컴포지션은 구성요소들, 구성이라는 뜻을 의미한다.
+   * v2 클래스 자체로 커플링이 된 것은 좋지 않다. 인터페이스로 디커플링을 해보자. 확장이 유연해진다!
    */
   class CoffeeMachine implements CoffeeMaker {
     private static BEANS_GRAM_PER_SHOT: number = 5; // class level
     private coffeeBeans: number = 0; // instance (object) level
 
-    constructor(coffeeBeans: number) {
+    constructor(
+      coffeeBeans: number,
+      private sugar: SugarProvider,
+      private milk: MilkFrother
+    ) {
       this.coffeeBeans = coffeeBeans;
-    }
-
-    static makeMachine(coffeeBeans: number): CoffeeMachine {
-      return new CoffeeMachine(coffeeBeans);
     }
 
     fillCoffeeBeans(beans: number) {
@@ -66,12 +75,14 @@ namespace Composition {
     makeCoffee(shots: number): CoffeeCup {
       this.grindBeans(shots);
       this.preheat();
-      return this.extract(shots);
+      const coffee = this.extract(shots);
+      const sugarAdded = this.sugar.addSugar(coffee);
+      return this.milk.makeMilk(sugarAdded);
     }
   }
 
   // 저렴한 거품기
-  class CheapMlikFrother {
+  class CheapMlikFrother implements MilkFrother {
     private steamMilk(): void {
       console.log('우유에 거품을 내는 중이에요... 🥛');
     }
@@ -84,8 +95,43 @@ namespace Composition {
     }
   }
 
-  // 설탕 제조기
-  class SugarMixer {
+  // 트렌디하고 예쁜 거품기
+  class FancyMlikFrother implements MilkFrother {
+    private steamMilk(): void {
+      console.log('멋지게✨ 우유에 거품을 내는 중이에요... 🥛');
+    }
+    makeMilk(cup: CoffeeCup): CoffeeCup {
+      this.steamMilk();
+      return {
+        ...cup,
+        hasMilk: true,
+      };
+    }
+  }
+
+  // 차갑게 내는 거품기?!
+  class ColdMlikFrother implements MilkFrother {
+    private steamMilk(): void {
+      console.log('차갑게❄️ 우유에 거품을 내는 중이에요... 🥛');
+    }
+    makeMilk(cup: CoffeeCup): CoffeeCup {
+      this.steamMilk();
+      return {
+        ...cup,
+        hasMilk: true,
+      };
+    }
+  }
+
+  // 우유는 안넣을게요 🙅🏻‍♂️
+  class NoMilk implements MilkFrother {
+    makeMilk(cup: CoffeeCup): CoffeeCup {
+      return cup;
+    }
+  }
+
+  // 사탕 설탕 제조기
+  class CandySugarMixer implements SugarProvider {
     private getSugar(): boolean {
       console.log('사탕을 설탕으로 만들고 있어요... 🍬');
       return true;
@@ -100,63 +146,58 @@ namespace Composition {
     }
   }
 
-  class CafeLatteMachine extends CoffeeMachine {
-    // Dependency Injection. 의존성 주입하기
-    constructor(
-      beans: number,
-      public readonly serialNumber: string,
-      private milkFrother: CheapMlikFrother
-    ) {
-      super(beans);
+  // 자체 설탕 제조기
+  class SugarMixer implements SugarProvider {
+    private getSugar(): boolean {
+      console.log('설탕을 만들고 있어요... 🍭');
+      return true;
     }
 
-    // 메소드 오버라이딩(Method overriding)
-    makeCoffee(shots: number): CoffeeCup {
-      const coffee = super.makeCoffee(shots);
-      return this.milkFrother.makeMilk(coffee);
+    addSugar(cup: CoffeeCup): CoffeeCup {
+      const sugar = this.getSugar();
+      return {
+        ...cup,
+        hasSugar: sugar,
+      };
     }
   }
 
-  class SweetCoffeeMachine extends CoffeeMachine {
-    constructor(beans: number, private sugar: SugarMixer) {
-      super(beans);
-    }
-    makeCoffee(shots: number): CoffeeCup {
-      const coffee = super.makeCoffee(shots);
-      return this.sugar.addSugar(coffee);
+  // 설탕은 안넣을게요 🙅🏻‍♂️
+  class NoSugar implements SugarProvider {
+    addSugar(cup: CoffeeCup): CoffeeCup {
+      return cup;
     }
   }
 
-  // 상속이 아닌 컴포지션으로 우유와 설탕을 둘 다 넣어보자.
-  // 필요한 기능을 외부에서 주입 받음으로써, 컴포지션으로 필요한 기능을 재사용할 수 있다.
-  // 코드의 재사용성 UP!
-  // 하지만 치명적인 단점이 존재한다. 서로에게 굉장히 타이트하게 커플링이 되어 있다는 점.
-  // 클래스와 클래스들 간에 이런 타이트한 커플링은 좋지 않다.
-  // 클래스 스스로 제약 시키는 것과 같기 때문이다.
-  class SweetCafeLatteMachine extends CoffeeMachine {
-    constructor(
-      beans: number,
-      private sugar: SugarMixer,
-      private milkFrother: CheapMlikFrother
-    ) {
-      super(beans);
-    }
+  // 🍬
+  const candySugar = new CandySugarMixer();
+  const sugar = new SugarMixer();
+  const noSugar = new NoSugar();
 
-    makeCoffee(shots: number): CoffeeCup {
-      const coffee = super.makeCoffee(shots);
-      const sugarAdded = this.sugar.addSugar(coffee);
-      return this.milkFrother.makeMilk(sugarAdded);
-    }
-  }
-
+  // 🥛
   const cheapMlikFrother = new CheapMlikFrother();
-  const sugarMixer = new SugarMixer();
-  const sweetCafeLatteMachine = new SweetCafeLatteMachine(
+  const fancyMlikFrother = new FancyMlikFrother();
+  const coldMlikFrother = new ColdMlikFrother();
+  const noMilk = new NoMilk();
+
+  // ⚙️ 같은 클래스를 재사용하면서 서로 다른 객체를 만들어서 용도에 맞게 사용할 수 있게 됐다.
+  const sweetCandyMachine = new CoffeeMachine(12, candySugar, noMilk);
+  const sweetMachine = new CoffeeMachine(20, sugar, noMilk);
+
+  const cafeLatteMachine = new CoffeeMachine(12, noSugar, cheapMlikFrother);
+  const fancyCafeLatteMachine = new CoffeeMachine(
+    36,
+    noSugar,
+    fancyMlikFrother
+  );
+  const coldCafeLatteMachine = new CoffeeMachine(24, noSugar, coldMlikFrother);
+  const sweetCafeLatteMachine = new CoffeeMachine(
     30,
-    sugarMixer,
+    candySugar,
     cheapMlikFrother
   );
+
+  console.log(fancyCafeLatteMachine);
+  console.log(coldCafeLatteMachine);
   console.log(sweetCafeLatteMachine);
-  const sweetCafeLatte = sweetCafeLatteMachine.makeCoffee(2);
-  console.log(sweetCafeLatte);
 }
