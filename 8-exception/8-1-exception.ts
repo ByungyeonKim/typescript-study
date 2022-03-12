@@ -1,7 +1,7 @@
 namespace Exception {
   // Java: Exception
   // JavaScript: Error
-  // Exception Handling
+  // Error(Exception) Handling: try -> catch -> finally
   // 런타임 환경이 아닌 컴파일 단계에서 error가 뜨도록 하자.
 
   type Direction = 'up' | 'down' | 'left' | 'right';
@@ -29,5 +29,33 @@ namespace Exception {
   }
   move('up');
   move('right');
-  console.log(position);
+
+  function readFile(fileName: string): string {
+    if (fileName === 'not exist! 💩') {
+      throw new Error(`file not exist! ${fileName}`);
+    }
+    return 'file contents 📄';
+  }
+
+  function closeFile(fileName: string) {
+    //
+  }
+
+  function run() {
+    const fileName = 'not exist! 💩';
+
+    // try 안에 이것저것 코드를 작성하기보다는
+    // 에러가 발생하는 부분만 try로 감싸서 catch와 finally하는 것이 더 좋다.
+    try {
+      console.log(readFile(fileName));
+    } catch (error) {
+      console.log('catched!!');
+      return;
+    } finally {
+      closeFile(fileName);
+      console.log('finally!!');
+    }
+  }
+  run();
+  console.log('어플이 다운되지 않았다!');
 }
